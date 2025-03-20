@@ -5,7 +5,7 @@ import KanbanColumn from "../../components/crm/KanbanColumn";
 import PedidoModal from "../../components/crm/PedidoModal";
 import PedidoForm from "../../components/crm/PedidoForm";
 import { Button } from "../../components/ui/button";
-import { Pedido } from "../../entities/pedido";
+import { Pedido } from "../../entities/Pedido";
 import { Plus } from "lucide-react";
 
 export default function PedidosPage() {

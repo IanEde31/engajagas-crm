@@ -4,7 +4,7 @@ import StatusCard from "../../components/dashboard/StatusCard";
 import RecentOrdersTable from "../../components/dashboard/RecentOrdersTable";
 import SalesChart from "../../components/dashboard/SalesChart";
 import ProductChart from "../../components/dashboard/ProductChart";
-import { Pedido } from "../../entities/pedido";
+import { Pedido } from "../../entities/Pedido";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
