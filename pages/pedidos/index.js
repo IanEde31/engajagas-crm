@@ -58,7 +58,9 @@ export default function PedidosPage() {
   const carregarPedidos = async () => {
     setIsLoading(true);
     try {
+      console.log('Tentando carregar pedidos...');
       const todosPedidos = await Pedido.getAll();
+      console.log('Pedidos carregados:', todosPedidos.length);
       setPedidos(todosPedidos);
       
       // Agrupar pedidos por status para as colunas

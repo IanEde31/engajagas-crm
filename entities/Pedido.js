@@ -15,13 +15,20 @@ export class Pedido {
 
   static async getAll() {
     try {
+      console.log('Iniciando busca de pedidos...');
+      console.log('URL do Supabase:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+      
       const { data, error } = await supabase
         .from('pedidos')
         .select('*')
         .order('data', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro Supabase:', error);
+        throw error;
+      }
       
+      console.log('Pedidos encontrados:', data ? data.length : 0);
       return data.map(pedido => new Pedido(pedido));
     } catch (error) {
       console.error('Erro ao buscar pedidos:', error);

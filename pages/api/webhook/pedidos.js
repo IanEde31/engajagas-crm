@@ -18,6 +18,9 @@ export default async function handler(req, res) {
     // Extrair dados do pedido do corpo da requisição
     const pedidoData = req.body;
     
+    // Log para debug
+    console.log('Dados recebidos no webhook:', JSON.stringify(pedidoData));
+    
     // Validação básica - ajuste conforme suas necessidades
     if (!pedidoData.cliente || !pedidoData.telefone || !pedidoData.endereco) {
       return res.status(400).json({ 
@@ -53,7 +56,11 @@ export default async function handler(req, res) {
       pedido: data[0]
     });
   } catch (error) {
-    console.error('Erro na API de webhook:', error);
-    return res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
+    console.error('Erro no processamento do webhook:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Falha ao processar o pedido',
+      details: error.message
+    });
   }
 }
