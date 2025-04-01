@@ -1,6 +1,6 @@
 import React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { 
@@ -13,6 +13,7 @@ import {
 import { cn } from "../../lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { STATUS_PEDIDO, atualizarStatusPedido } from "../../utils/index";
 
 export default function PedidoModal({ 
   pedido, 
@@ -37,8 +38,29 @@ export default function PedidoModal({
   const saveStatusChange = async () => {
     if (status !== pedido.status) {
       setLoading(true);
-      await onStatusChange(pedido.id, status);
-      setLoading(false);
+      try {
+        await onStatusChange(pedido.id, status);
+      } catch (error) {
+        console.error("Erro ao salvar alteração de status:", error);
+        alert("Erro ao atualizar status do pedido");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+  
+  // Função para marcar pedido como entregue rapidamente
+  const marcarComoEntregue = async () => {
+    if (pedido.status !== STATUS_PEDIDO.ENTREGUE) {
+      setLoading(true);
+      try {
+        await onStatusChange(pedido.id, STATUS_PEDIDO.ENTREGUE);
+      } catch (error) {
+        console.error("Erro ao marcar pedido como entregue:", error);
+        alert("Erro ao marcar pedido como entregue");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -134,19 +156,33 @@ export default function PedidoModal({
 
               <div className="pt-2">
                 <p className="text-sm text-gray-500 mb-1">Atualizar Status</p>
-                <Select value={status} onValueChange={handleStatusChange}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione um status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pedido recebido">Pedido recebido</SelectItem>
-                    <SelectItem value="Enviado Para Entrega">Enviado Para Entrega</SelectItem>
-                    <SelectItem value="Saiu para Entrega">Saiu para Entrega</SelectItem>
-                    <SelectItem value="Entregue">Entregue</SelectItem>
-                    <SelectItem value="Cancelado">Cancelado</SelectItem>
-                    <SelectItem value="Agendado">Agendado</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select value={status} onValueChange={handleStatusChange} className="flex-1">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={STATUS_PEDIDO.RECEBIDO}>Pedido recebido</SelectItem>
+                      <SelectItem value={STATUS_PEDIDO.ENVIADO_PARA_ENTREGA}>Enviado Para Entrega</SelectItem>
+                      <SelectItem value={STATUS_PEDIDO.SAIU_PARA_ENTREGA}>Saiu para Entrega</SelectItem>
+                      <SelectItem value={STATUS_PEDIDO.ENTREGUE}>Entregue</SelectItem>
+                      <SelectItem value={STATUS_PEDIDO.CANCELADO}>Cancelado</SelectItem>
+                      <SelectItem value={STATUS_PEDIDO.AGENDADO}>Agendado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  {pedido.status !== STATUS_PEDIDO.ENTREGUE && (
+                    <Button 
+                      variant="outline" 
+                      className="bg-green-50 hover:bg-green-100 border-green-200"
+                      onClick={marcarComoEntregue}
+                      disabled={loading}
+                      title="Marcar como entregue"
+                    >
+                      <Check className="h-4 w-4 text-green-600" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -163,7 +199,7 @@ export default function PedidoModal({
                 onClick={saveStatusChange}
                 disabled={loading || status === pedido.status}
               >
-                Salvar
+                {loading ? "Salvando..." : "Salvar"}
               </Button>
             </div>
           </div>

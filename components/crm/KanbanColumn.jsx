@@ -3,6 +3,7 @@ import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { Card } from "../ui/card";
 import PedidoCard from "./PedidoCard";
 import { cn } from "../../lib/utils";
+import { STATUS_COLORS } from "../../utils/index";
 
 export default function KanbanColumn({ 
   id, 
@@ -28,7 +29,7 @@ export default function KanbanColumn({
             ref={provided.innerRef}
             {...provided.droppableProps}
             className={cn(
-              "flex-1 min-h-[calc(100vh-240px)] max-h-[calc(100vh-240px)] overflow-y-auto p-2 rounded-b-md",
+              "flex-1 min-h-[calc(100vh-240px)] max-h-[calc(100vh-240px)] overflow-y-auto p-2 rounded-b-md transition-colors duration-200",
               snapshot.isDraggingOver ? "bg-blue-50" : "bg-gray-50"
             )}
           >
@@ -39,7 +40,14 @@ export default function KanbanColumn({
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className="mb-2"
+                    className={cn(
+                      "mb-2 transition-transform duration-200",
+                      snapshot.isDragging ? "scale-105 z-10" : ""
+                    )}
+                    style={{
+                      ...provided.draggableProps.style,
+                      ...(snapshot.isDragging ? { boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)" } : {})
+                    }}
                   >
                     <PedidoCard
                       pedido={pedido}

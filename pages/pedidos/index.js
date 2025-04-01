@@ -7,6 +7,7 @@ import PedidoForm from "../../components/crm/PedidoForm";
 import { Button } from "../../components/ui/button";
 import { Pedido } from "../../entities/Pedido";
 import { Plus } from "lucide-react";
+import { STATUS_PEDIDO, STATUS_COLORS, atualizarStatusPedido, reorganizarPedidosAposDragDrop } from "../../utils/index";
 
 export default function PedidosPage() {
   const [pedidos, setPedidos] = useState([]);
@@ -19,35 +20,35 @@ export default function PedidosPage() {
 
   // Configuração das colunas
   const configColunas = {
-    "Pedido recebido": {
+    [STATUS_PEDIDO.RECEBIDO]: {
       id: "pedido-recebido",
-      titulo: "Pedido recebido",
-      cor: "bg-blue-500",
+      titulo: STATUS_PEDIDO.RECEBIDO,
+      cor: STATUS_COLORS[STATUS_PEDIDO.RECEBIDO],
     },
-    "Enviado Para Entrega": {
+    [STATUS_PEDIDO.ENVIADO_PARA_ENTREGA]: {
       id: "enviado-para-entrega",
-      titulo: "Enviado Para Entrega",
-      cor: "bg-yellow-500",
+      titulo: STATUS_PEDIDO.ENVIADO_PARA_ENTREGA,
+      cor: STATUS_COLORS[STATUS_PEDIDO.ENVIADO_PARA_ENTREGA],
     },
-    "Saiu para Entrega": {
+    [STATUS_PEDIDO.SAIU_PARA_ENTREGA]: {
       id: "saiu-para-entrega",
-      titulo: "Saiu para Entrega",
-      cor: "bg-orange-500",
+      titulo: STATUS_PEDIDO.SAIU_PARA_ENTREGA,
+      cor: STATUS_COLORS[STATUS_PEDIDO.SAIU_PARA_ENTREGA],
     },
-    "Entregue": {
+    [STATUS_PEDIDO.ENTREGUE]: {
       id: "entregue",
-      titulo: "Entregue",
-      cor: "bg-green-500",
+      titulo: STATUS_PEDIDO.ENTREGUE,
+      cor: STATUS_COLORS[STATUS_PEDIDO.ENTREGUE],
     },
-    "Cancelado": {
+    [STATUS_PEDIDO.CANCELADO]: {
       id: "cancelado",
-      titulo: "Cancelado",
-      cor: "bg-red-500",
+      titulo: STATUS_PEDIDO.CANCELADO,
+      cor: STATUS_COLORS[STATUS_PEDIDO.CANCELADO],
     },
-    "Agendado": {
+    [STATUS_PEDIDO.AGENDADO]: {
       id: "agendado",
-      titulo: "Agendado",
-      cor: "bg-purple-500",
+      titulo: STATUS_PEDIDO.AGENDADO,
+      cor: STATUS_COLORS[STATUS_PEDIDO.AGENDADO],
     },
   };
 
@@ -97,34 +98,22 @@ export default function PedidosPage() {
       status => configColunas[status].id === destination.droppableId
     );
 
-    if (pedido && novoStatus && pedido.status !== novoStatus) {
-      // Atualizar UI imediatamente
-      const novoPedido = { ...pedido, status: novoStatus };
-      
-      // Atualizar estado dos pedidos
-      const novosPedidos = pedidos.map(p => 
-        p.id === pedidoId ? novoPedido : p
+    // Identificar o status de origem
+    const sourceStatus = pedido.status;
+
+    if (pedido && novoStatus && sourceStatus !== novoStatus) {
+      // Atualizar UI imediatamente usando a função utilitária
+      const { novosPedidos, novasColunas } = reorganizarPedidosAposDragDrop(
+        pedidos, 
+        colunas, 
+        pedidoId, 
+        novoStatus, 
+        sourceStatus, 
+        destination.index
       );
       
+      // Atualizar estados
       setPedidos(novosPedidos);
-      
-      // Reorganizar colunas
-      const novasColunas = {};
-      Object.keys(configColunas).forEach(status => {
-        if (status === source.droppableId) {
-          // Remover da coluna origem
-          novasColunas[status] = colunas[status].filter(p => p.id !== pedidoId);
-        } else if (status === novoStatus) {
-          // Adicionar na coluna destino
-          const colunaCopia = [...colunas[status]];
-          colunaCopia.splice(destination.index, 0, novoPedido);
-          novasColunas[status] = colunaCopia;
-        } else {
-          // Manter outras colunas inalteradas
-          novasColunas[status] = colunas[status];
-        }
-      });
-      
       setColunas(novasColunas);
       
       // Atualizar no banco de dados
@@ -145,12 +134,45 @@ export default function PedidosPage() {
 
   const handleStatusChange = async (pedidoId, novoStatus) => {
     try {
+      // Encontrar o pedido a ser atualizado
+      const pedido = pedidos.find(p => p.id === pedidoId);
+      if (!pedido) throw new Error("Pedido não encontrado");
+      
+      // Atualizar no banco de dados
       await Pedido.update(pedidoId, { status: novoStatus });
-      // Recarregar pedidos após a atualização
-      carregarPedidos();
+      
+      // Atualizar UI imediatamente
+      const novoPedido = { ...pedido, status: novoStatus };
+      
+      // Atualizar estado dos pedidos
+      const novosPedidos = pedidos.map(p => 
+        p.id === pedidoId ? novoPedido : p
+      );
+      
+      setPedidos(novosPedidos);
+      
+      // Reorganizar colunas
+      const novasColunas = {};
+      Object.keys(configColunas).forEach(status => {
+        if (status === pedido.status) {
+          // Remover da coluna origem
+          novasColunas[status] = colunas[status].filter(p => p.id !== pedidoId);
+        } else if (status === novoStatus) {
+          // Adicionar na coluna destino
+          const colunaCopia = [...(colunas[status] || [])];
+          colunaCopia.push(novoPedido);
+          novasColunas[status] = colunaCopia;
+        } else {
+          // Manter outras colunas inalteradas
+          novasColunas[status] = colunas[status];
+        }
+      });
+      
+      setColunas(novasColunas);
       setModalAberto(false);
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
+      alert("Erro ao atualizar status do pedido");
     }
   };
 

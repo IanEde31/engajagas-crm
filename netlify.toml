@@ -4,6 +4,18 @@
 
 [build.environment]
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  NODE_VERSION = "18"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# Configuração para lidar com rotas de API e páginas Next.js
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/nextjs-server/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/nextjs-server"
+  status = 200

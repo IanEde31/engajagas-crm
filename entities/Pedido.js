@@ -69,6 +69,7 @@ export class Pedido {
     }
   }
 
+  // Método de instância para atualizar um pedido existente
   async update(updates) {
     try {
       const { data, error } = await supabase
@@ -83,6 +84,24 @@ export class Pedido {
       return this;
     } catch (error) {
       console.error(`Erro ao atualizar pedido ${this.id}:`, error);
+      return null;
+    }
+  }
+  
+  // Método estático para atualizar um pedido pelo ID
+  static async update(id, updates) {
+    try {
+      const { data, error } = await supabase
+        .from('pedidos')
+        .update(updates)
+        .eq('id', id)
+        .select();
+
+      if (error) throw error;
+      
+      return data[0] ? new Pedido(data[0]) : null;
+    } catch (error) {
+      console.error(`Erro ao atualizar pedido ${id}:`, error);
       return null;
     }
   }
